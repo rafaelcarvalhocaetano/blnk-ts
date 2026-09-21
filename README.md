@@ -802,6 +802,17 @@ The bulk transactions API validates the following:
 
 ### Error Handling
 
+Compare `response.error?.code` against the constants in `BlnkErrorCode`, which mirror the full Core 0.15.4 catalogue (`TXN_ALREADY_REFUNDED`, `BAL_NOT_FOUND`, `TXN_INSUFFICIENT_FUNDS`, `TXN_DUPLICATE_REFERENCE`, `LGR_NOT_FOUND`, and so on):
+
+```typescript
+import {BlnkErrorCode} from '@blnkfinance/blnk-typescript';
+
+const refund = await Transactions.refund(transactionId);
+if (refund.error?.code === BlnkErrorCode.TXN_ALREADY_REFUNDED) {
+  // 409: already refunded, or this id is itself a refund — nothing to do
+}
+```
+
 ```typescript
 try {
   const response = await Transactions.createBulk(bulkData);
