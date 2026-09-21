@@ -5,6 +5,61 @@ import {
   parseBlnkApiErrorBody,
 } from "../../../../src/types/errors";
 
+const KNOWN_PREFIXES = new Set([
+  `GEN`,
+  `AUTH`,
+  `APIKEY`,
+  `TXN`,
+  `BAL`,
+  `LGR`,
+  `ACC`,
+  `IDT`,
+  `RECON`,
+  `META`,
+  `HOOK`,
+  `QUEUE`,
+  `SRCH`,
+  `ADMIN`,
+]);
+
+tap.test(`BlnkErrorCode`, t => {
+  t.test(
+    `every constant's value equals its name, is unique, and uses a Core prefix`,
+    tt => {
+      const entries = Object.entries(BlnkErrorCode);
+      const seen = new Set<string>();
+
+      for (const [name, value] of entries) {
+        tt.equal(value, name, `constant name and value must match`);
+        tt.ok(!seen.has(value), `duplicate error code ${value}`);
+        seen.add(value);
+        const prefix = value.slice(0, value.indexOf(`_`));
+        tt.ok(KNOWN_PREFIXES.has(prefix), `unknown Core prefix on ${value}`);
+      }
+
+      tt.equal(entries.length, 79, `expected the full Core 0.15.4 catalogue`);
+      tt.end();
+    },
+  );
+
+  t.test(`Core 0.15.4 codes are present`, tt => {
+    tt.equal(BlnkErrorCode.TXN_ALREADY_REFUNDED, `TXN_ALREADY_REFUNDED`);
+    tt.equal(BlnkErrorCode.BAL_NOT_FOUND, `BAL_NOT_FOUND`);
+    tt.equal(BlnkErrorCode.TXN_VALIDATION_ERROR, `TXN_VALIDATION_ERROR`);
+    tt.equal(BlnkErrorCode.GEN_CONFLICT, `GEN_CONFLICT`);
+    tt.end();
+  });
+
+  t.test(`pre-1.5.0 constants are unchanged`, tt => {
+    tt.equal(BlnkErrorCode.TXN_INVALID_AMOUNT, `TXN_INVALID_AMOUNT`);
+    tt.equal(BlnkErrorCode.GEN_CONFLICT, `GEN_CONFLICT`);
+    tt.equal(BlnkErrorCode.TXN_VALIDATION_ERROR, `TXN_VALIDATION_ERROR`);
+    tt.end();
+  });
+
+  t.end();
+});
+
 tap.test(`parseBlnkApiErrorBody`, t => {
   t.test(`parses error_detail from Core API responses`, tt => {
     const parsed = parseBlnkApiErrorBody({
@@ -82,6 +137,40 @@ tap.test(`parseBlnkApiErrorBody`, t => {
     }
     tt.end();
   });
+
+  t.test(
+    `surfaces TXN_ALREADY_REFUNDED from a Core 0.15.4 duplicate refund`,
+    tt => {
+      const parsed = parseBlnkApiErrorBody({
+        error: `transaction txn_1 has already been refunded`,
+        error_detail: {
+          code: BlnkErrorCode.TXN_ALREADY_REFUNDED,
+          message: `transaction txn_1 has already been refunded`,
+          details: {transaction_id: `txn_1`},
+        },
+      });
+
+      tt.equal(parsed?.code, BlnkErrorCode.TXN_ALREADY_REFUNDED);
+      tt.same(parsed?.details, {transaction_id: `txn_1`});
+      tt.end();
+    },
+  );
+
+  t.test(
+    `surfaces BAL_NOT_FOUND when a transaction names a missing balance`,
+    tt => {
+      const parsed = parseBlnkApiErrorBody({
+        error: `balance bln_missing not found`,
+        error_detail: {
+          code: BlnkErrorCode.BAL_NOT_FOUND,
+          message: `balance bln_missing not found`,
+        },
+      });
+
+      tt.equal(parsed?.code, BlnkErrorCode.BAL_NOT_FOUND);
+      tt.end();
+    },
+  );
 
   t.end();
 });
