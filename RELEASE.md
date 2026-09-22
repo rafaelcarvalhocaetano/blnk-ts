@@ -14,6 +14,18 @@ Aligns the TypeScript SDK error catalogue with [Blnk Core 0.15.4](https://docs.b
   - `GEN_CONFLICT` (`409`) is now also returned when a multi-leg refund fails.
 - The three existing constants (`TXN_INVALID_AMOUNT`, `GEN_CONFLICT`, `TXN_VALIDATION_ERROR`) keep their values; no caller changes are needed.
 
+### Search
+
+- **`Search.multiSearch(params)`** — Wraps Core's `POST /multi-search`
+  (`api/api.go`: `router.POST("/multi-search", a.MultiSearch)`). That route has
+  been in Core since v0.10.0 (`b396752`); this SDK release is aligned with Core
+  0.15.4. Core binds the body to Typesense's `MultiSearchSearchesParameter` and
+  forwards it unchanged, so the wire shape is
+  `{"searches": [{"collection": ..., "q": ..., ...}]}`. The response has
+  `results` in the same order as `searches`. Each entry is validated client-side
+  with the same rules as `search()`, and failures name the entry
+  (`searches[1].collection ...`). Live coverage is gated on `BLNK_E2E=1`.
+
 ## v1.4.0
 
 v1.4.0 targets **Blnk Core 0.15.3**. v1.3.0 shipped Core 0.15.0 parity; this release adds dry-run previews, General Ledger `indicator` on create, refund narration/metadata, and named Core error codes.

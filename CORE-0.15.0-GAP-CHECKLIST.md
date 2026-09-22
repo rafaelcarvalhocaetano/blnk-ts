@@ -119,7 +119,7 @@ These Core routes exist in `api.go` but have **no SDK method**. Not called out i
 | P2-6 | `GET /transactions` | `Transactions.list()` |
 | P2-7 | `POST /transactions/filter` | `Transactions.filter()` |
 | P2-8 | `POST /identities/filter` | `Identity.filter()` |
-| P2-9 | `POST /multi-search` | `Search.multiSearch()` |
+| P2-9 | `POST /multi-search` | `Search.multiSearch()` | ✅ `feat/multi-search` — Core route since v0.10.0; SDK aligned with 0.15.4 |
 
 ---
 
