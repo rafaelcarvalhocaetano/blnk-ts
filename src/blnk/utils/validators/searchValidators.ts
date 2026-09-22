@@ -4,6 +4,7 @@ import {
   FilterOperator,
   FilterParams,
   FilterSortOrder,
+  MultiSearchParams,
   SearchCollection,
   SearchParams,
   StartReindexRequest,
@@ -60,6 +61,46 @@ export function ValidateSearchParams(data: SearchParams): string | null {
 
   if (data.sort_by !== undefined && typeof data.sort_by !== `string`) {
     return `sort_by must be a string if provided`;
+  }
+
+  return null;
+}
+
+/**
+ * Validates a multi-search body: `searches` must be a non-empty list, and each
+ * entry needs a valid `collection` plus params that pass
+ * `ValidateSearchParams`. Messages are prefixed `searches[i]`.
+ */
+export function ValidateMultiSearchParams(
+  data: MultiSearchParams | null | undefined,
+): string | null {
+  if (!data || typeof data !== `object`) {
+    return `Multi-search params must be a valid object`;
+  }
+
+  if (!Array.isArray(data.searches) || data.searches.length === 0) {
+    return `searches must be a non-empty array`;
+  }
+
+  for (let i = 0; i < data.searches.length; i++) {
+    const entry = data.searches[i];
+    if (!entry || typeof entry !== `object` || Array.isArray(entry)) {
+      return `searches[${i}] must be a valid object`;
+    }
+
+    if (
+      typeof entry.collection !== `string` ||
+      ValidateSearchCollection(entry.collection) !== null
+    ) {
+      return `searches[${i}].collection must be ledgers, transactions, balances, or identities`;
+    }
+
+    const params = {...entry};
+    delete (params as {collection?: string}).collection;
+    const paramsError = ValidateSearchParams(params);
+    if (paramsError) {
+      return `searches[${i}]: ${paramsError}`;
+    }
   }
 
   return null;

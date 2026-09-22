@@ -859,11 +859,12 @@ The Blnk CLI allows you to list all ledgers, balances, and transactions quickly:
 
 ## Search
 
-Blnk supports two search modes on the `Search` service:
+Blnk search APIs on the `Search` service:
 
 | Method | Endpoint | Use case |
 |--------|----------|----------|
 | `Search.search(params, collection)` | `POST /search/{collection}` | Full-text search via Typesense |
+| `Search.multiSearch(params)` | `POST /multi-search` | Several Typesense searches in one request (Core 0.10.0+) |
 | `Search.filter(params, collection)` | `POST /{collection}/filter` | Structured DB filters (Core 0.13.2+) |
 | `Search.startReindex(options?)` | `POST /search/reindex` | Rebuild Typesense index from DB |
 | `Search.getReindexStatus()` | `GET /search/reindex` | Poll reindex progress |
@@ -880,6 +881,27 @@ const results = await Search.search(
   'transactions',
 );
 ```
+
+Search several collections in one request (`POST /multi-search`; results come back
+in the same order as the searches):
+
+```typescript
+const { Search } = blnk;
+
+const multi = await Search.multiSearch({
+  searches: [
+    { collection: 'transactions', q: 'ref_001', query_by: 'reference' },
+    { collection: 'balances', q: '*', filter_by: 'currency:USD' },
+    { collection: 'ledgers', q: 'savings', query_by: 'name' },
+  ],
+});
+
+const transactionHits = multi.data?.results[0]?.hits;
+```
+
+Requires Blnk Core v0.10.0+ (`router.POST("/multi-search", a.MultiSearch)` in
+[`api/api.go`](https://github.com/blnkfinance/blnk/blob/master/api/api.go)). This
+SDK is aligned with Core 0.15.4.
 
 ### DB filter
 

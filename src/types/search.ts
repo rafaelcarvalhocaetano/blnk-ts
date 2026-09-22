@@ -12,7 +12,24 @@ export interface SearchParams {
   per_page?: number;
 }
 
-/** Collection names supported by `Search.search`. */
+/**
+ * One entry in a `POST /multi-search` body. `collection` names the Typesense
+ * collection; remaining fields match `SearchParams`.
+ */
+export interface MultiSearchCollectionParams extends SearchParams {
+  collection: SearchCollection;
+}
+
+/**
+ * Request body for `POST /multi-search`. Wire shape is Typesense's
+ * `{"searches":[{"collection":..., "q":..., ...}]}`; results come back in the
+ * same order.
+ */
+export interface MultiSearchParams {
+  searches: MultiSearchCollectionParams[];
+}
+
+/** Collection names supported by `Search.search` and `Search.multiSearch`. */
 export type SearchCollection =
   | `ledgers`
   | `transactions`
@@ -158,6 +175,18 @@ export type SearchLedgerResponse = SearchResponse<SearchLedgerDocument>;
 export type SearchBalanceResponse = SearchResponse<SearchBalanceDocument>;
 export type SearchTransactionResponse =
   SearchResponse<SearchTransactionDocument>;
+
+/** Mixed-collection document union for `POST /multi-search` result buckets. */
+export type SearchDocument =
+  | SearchLedgerDocument
+  | SearchTransactionDocument
+  | SearchBalanceDocument
+  | SearchIdentityDocument;
+
+/** Response from `POST /multi-search`; `results` match `searches` order. */
+export interface MultiSearchResponse {
+  results: SearchResponse<SearchDocument>[];
+}
 
 /** Filter operators supported by `POST /{collection}/filter`. */
 export type FilterOperator =

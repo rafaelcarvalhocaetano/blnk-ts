@@ -8,6 +8,8 @@ import {
   FilterParams,
   FilterRecordByCollection,
   FilterResponse,
+  MultiSearchParams,
+  MultiSearchResponse,
   SearchCollection,
   SearchDocumentByCollection,
   SearchParams,
@@ -19,6 +21,7 @@ import {
 import {HandleError} from "../utils/logger";
 import {
   ValidateFilterParams,
+  ValidateMultiSearchParams,
   ValidateSearchCollection,
   ValidateSearchParams,
   ValidateStartReindexRequest,
@@ -41,6 +44,38 @@ export class Search {
     this.request = request;
     this.logger = logger;
     this.formatResponse = formatResponse;
+  }
+
+  /**
+   * Runs several searches in one request — `POST multi-search`. The body is
+   * validated, then forwarded unmodified.
+   *
+   * Core has exposed this route since v0.10.0 (`api/api.go`). This SDK is
+   * aligned with Core 0.15.4.
+   */
+  async multiSearch(
+    data: MultiSearchParams,
+  ): Promise<ApiResponse<MultiSearchResponse | null>> {
+    try {
+      const error = ValidateMultiSearchParams(data);
+      if (error) {
+        return this.formatResponse(400, error, null);
+      }
+
+      const response = await this.request<
+        MultiSearchParams,
+        MultiSearchResponse
+      >(`multi-search`, data, `POST`);
+
+      return response;
+    } catch (error) {
+      return HandleError(
+        error,
+        this.logger,
+        this.formatResponse,
+        this.multiSearch.name,
+      );
+    }
   }
 
   async search<C extends SearchCollection>(
