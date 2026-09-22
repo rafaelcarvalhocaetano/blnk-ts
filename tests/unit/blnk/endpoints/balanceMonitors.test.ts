@@ -142,6 +142,69 @@ tap.test(`GET BalanceMonitor`, async t => {
     ]);
     childTest.end();
   });
+
+  t.test(`List Balance Monitors by balance id`, async childTest => {
+    const mockLogger = createMockLogger();
+    const thirdPartyRequest: BlnkRequest = createMockBlnkRequest(
+      true,
+      undefined,
+      200,
+    );
+    const capturedRequest = childTest.captureFn(thirdPartyRequest);
+    const balanceMonitor = new BalanceMonitor(
+      capturedRequest,
+      mockLogger,
+      FormatResponse,
+    );
+    const balanceId = `bln_5ce86029-3c2e-4e2a-aae2-7fb931ca4c4f`;
+    const response = await balanceMonitor.listByBalanceId(balanceId);
+    childTest.equal(response.status, 200);
+    childTest.match(capturedRequest.args(), [
+      [`balance-monitors/balances/${balanceId}`, undefined, `GET`],
+    ]);
+    childTest.end();
+  });
+
+  t.test(`listByBalanceId rejects empty balance id`, async childTest => {
+    const mockLogger = createMockLogger();
+    const thirdPartyRequest: BlnkRequest = createMockBlnkRequest(
+      true,
+      undefined,
+      200,
+    );
+    const capturedRequest = childTest.captureFn(thirdPartyRequest);
+    const balanceMonitor = new BalanceMonitor(
+      capturedRequest,
+      mockLogger,
+      FormatResponse,
+    );
+    const response = await balanceMonitor.listByBalanceId(``);
+    childTest.equal(response.status, 400);
+    childTest.equal(response.message, `balance id is required`);
+    childTest.match(capturedRequest.args(), []);
+    childTest.end();
+  });
+
+  t.test(
+    `listByBalanceId handles thrown errors gracefully`,
+    async childTest => {
+      const mockLogger = createMockLogger();
+      const thirdPartyRequest: BlnkRequest = createMockBlnkRequest(
+        true,
+        `Network Error`,
+      );
+      const capturedRequest = childTest.captureFn(thirdPartyRequest);
+      const balanceMonitor = new BalanceMonitor(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+      const response = await balanceMonitor.listByBalanceId(`bln_123`);
+      childTest.equal(response.status, 500);
+      childTest.equal(response.message, `Network Error`);
+      childTest.end();
+    },
+  );
 });
 
 tap.test(`PUT BalanceMonitor`, async t => {

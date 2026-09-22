@@ -111,12 +111,12 @@ These Core routes exist in `api.go` but have **no SDK method**. Not called out i
 
 | # | Core route | Suggested SDK method |
 |---|------------|---------------------|
-| P2-1 | `GET /ledgers` | `Ledgers.list()` |
+| P2-1 | `GET /ledgers` | `Ledgers.list()` | ✅ `feat/list-resources` — Core list route since ~0.14.x; SDK aligned with 0.15.4 |
 | P2-2 | `POST /ledgers/filter` | `Ledgers.filter()` |
-| P2-3 | `GET /balances` | `LedgerBalances.list()` |
+| P2-3 | `GET /balances` | `LedgerBalances.list()` | ✅ `feat/list-resources` — Core list route since ~0.14.x; SDK aligned with 0.15.4 |
 | P2-4 | `POST /balances/filter` | `LedgerBalances.filter()` |
-| P2-5 | `GET /balance-monitors/balances/:balance_id` | `BalanceMonitor.listByBalanceId()` |
-| P2-6 | `GET /transactions` | `Transactions.list()` |
+| P2-5 | `GET /balance-monitors/balances/:balance_id` | `BalanceMonitor.listByBalanceId()` | ✅ `feat/list-resources` — Core list route since ~0.14.x; SDK aligned with 0.15.4 |
+| P2-6 | `GET /transactions` | `Transactions.list()` | ✅ `feat/list-resources` — Core list route since ~0.14.x; SDK aligned with 0.15.4 |
 | P2-7 | `POST /transactions/filter` | `Transactions.filter()` |
 | P2-8 | `POST /identities/filter` | `Identity.filter()` |
 | P2-9 | `POST /multi-search` | `Search.multiSearch()` | ✅ `feat/multi-search` — Core route since v0.10.0; SDK aligned with 0.15.4 |
@@ -155,10 +155,10 @@ These Core routes exist in `api.go` but have **no SDK method**. Not called out i
 
 | Resource | SDK methods |
 |----------|-------------|
-| Ledgers | `create`, `get`, `update` |
-| Balances | `create`, `get`, `getByIndicator`, `getAt`, `createSnapshot`, `updateIdentity`, `getLineage` |
-| Balance monitors | `create`, `get`, `list`, `update` |
-| Transactions | `create`, `createBulk`, `get`, `getByReference`, `getLineage`, `updateStatus`, `refund`, `bulkCommitInflight`, `bulkVoidInflight`, `recoverQueue` |
+| Ledgers | `create`, `get`, `list`, `update` |
+| Balances | `create`, `get`, `list`, `getByIndicator`, `getAt`, `createSnapshot`, `updateIdentity`, `getLineage` |
+| Balance monitors | `create`, `get`, `list`, `listByBalanceId`, `update` |
+| Transactions | `create`, `createBulk`, `get`, `list`, `getByReference`, `getLineage`, `updateStatus`, `refund`, `bulkCommitInflight`, `bulkVoidInflight`, `recoverQueue` |
 | Identities | `create`, `get`, `update`, `list`, tokenize/detokenize helpers |
 | Reconciliation | `upload`, `createMatchingRule`, `updateMatchingRule`, `deleteMatchingRule`, `run`, `runInstant`, `get` |
 | Search | `search`, `filter`, `startReindex`, `getReindexStatus` |

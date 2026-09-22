@@ -7,6 +7,7 @@ import {BlnkLogger} from "../../types/blnkClient";
 import {BlnkRequest, FormatResponseType} from "../../types/general";
 import {HandleError} from "../utils/logger";
 import {
+  ValidateBalanceId,
   ValidateMonitorData,
   ValidateMonitorId,
 } from "../utils/validators/balanceMonitors";
@@ -138,6 +139,36 @@ export class BalanceMonitor {
         this.logger,
         this.formatResponse,
         this.get.name,
+      );
+    }
+  }
+
+  /**
+   * Lists monitors for one balance via
+   * `GET /balance-monitors/balances/{balance_id}`.
+   *
+   * This Core route has been present since ~0.14.x. This SDK is aligned with
+   * Core 0.15.4.
+   */
+  async listByBalanceId(balanceId: string) {
+    try {
+      const validatorResponse = ValidateBalanceId(balanceId);
+      if (validatorResponse) {
+        return this.formatResponse(400, validatorResponse, null);
+      }
+
+      const response = await this.request<undefined, MonitorDataResp[]>(
+        `balance-monitors/balances/${encodeURIComponent(balanceId)}`,
+        undefined,
+        `GET`,
+      );
+      return response;
+    } catch (error) {
+      return HandleError(
+        error,
+        this.logger,
+        this.formatResponse,
+        this.listByBalanceId.name,
       );
     }
   }

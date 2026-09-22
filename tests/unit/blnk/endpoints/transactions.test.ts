@@ -620,6 +620,76 @@ tap.test(`GET transaction by id`, async t => {
     childTest.equal(response.message, `transaction id is required`);
     childTest.end();
   });
+
+  t.test(
+    `list calls GET /transactions with no query when no options are given`,
+    async childTest => {
+      const capturedRequest = childTest.captureFn(thirdPartyRequest);
+      const transactions = new Transactions(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+
+      const response = await transactions.list();
+      childTest.match(capturedRequest.args(), [
+        [`transactions`, undefined, `GET`],
+      ]);
+      childTest.equal(response.status, 200);
+      childTest.end();
+    },
+  );
+
+  t.test(
+    `list forwards limit and offset as query parameters`,
+    async childTest => {
+      const capturedRequest = childTest.captureFn(thirdPartyRequest);
+      const transactions = new Transactions(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+
+      await transactions.list({limit: 100, offset: 200});
+      childTest.match(capturedRequest.args(), [
+        [`transactions?limit=100&offset=200`, undefined, `GET`],
+      ]);
+      childTest.end();
+    },
+  );
+
+  t.test(
+    `list rejects a limit below 1 without calling the API`,
+    async childTest => {
+      const capturedRequest = childTest.captureFn(thirdPartyRequest);
+      const transactions = new Transactions(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+
+      const response = await transactions.list({limit: 0});
+      childTest.match(capturedRequest.args(), []);
+      childTest.equal(response.status, 400);
+      childTest.equal(response.message, `limit must be at least 1`);
+      childTest.end();
+    },
+  );
+
+  t.test(`list handles thrown errors gracefully`, async childTest => {
+    const thirdPartyRequest = createMockBlnkRequest(true, `Network Error`);
+    const capturedRequest = childTest.captureFn(thirdPartyRequest);
+    const transactions = new Transactions(
+      capturedRequest,
+      mockLogger,
+      FormatResponse,
+    );
+
+    const response = await transactions.list();
+    childTest.equal(response.status, 500);
+    childTest.equal(response.message, `Network Error`);
+    childTest.end();
+  });
 });
 
 tap.test(`GET transaction lineage`, async t => {

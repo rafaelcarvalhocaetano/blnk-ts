@@ -9,6 +9,14 @@ export function ValidateMonitorId(id: string): string | null {
   return null;
 }
 
+export function ValidateBalanceId(id: string): string | null {
+  if (!IsValidString(id) || id.trim() === ``) {
+    return `balance id is required`;
+  }
+
+  return null;
+}
+
 export function ValidateMonitorData(data: MonitorData): string | null {
   // Validate if data is an object
   if (!data || typeof data !== `object`) {

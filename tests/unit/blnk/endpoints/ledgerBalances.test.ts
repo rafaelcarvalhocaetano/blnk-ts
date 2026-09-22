@@ -696,5 +696,80 @@ tap.test(`Ledger Balance Tests`, t => {
     tt.end();
   });
 
+  t.test(
+    `list calls GET /balances with no query when no options are given`,
+    async tt => {
+      const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+      const capturedRequest = tt.captureFn(thirdPartyRequest);
+      const ledgerBalance = new LedgerBalances(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+
+      const response = await ledgerBalance.list();
+
+      tt.match(capturedRequest.args(), [[`balances`, undefined, `GET`]]);
+      tt.equal(response.status, 200);
+      tt.end();
+    },
+  );
+
+  t.test(`list forwards only the pagination fields that were set`, async tt => {
+    const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+    const capturedRequest = tt.captureFn(thirdPartyRequest);
+    const ledgerBalance = new LedgerBalances(
+      capturedRequest,
+      mockLogger,
+      FormatResponse,
+    );
+
+    await ledgerBalance.list({offset: 20});
+
+    tt.match(capturedRequest.args(), [
+      [`balances?offset=20`, undefined, `GET`],
+    ]);
+    tt.end();
+  });
+
+  t.test(`list rejects a negative offset without calling the API`, async tt => {
+    const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+    const capturedRequest = tt.captureFn(thirdPartyRequest);
+    const ledgerBalance = new LedgerBalances(
+      capturedRequest,
+      mockLogger,
+      FormatResponse,
+    );
+
+    const response = await ledgerBalance.list({offset: -1});
+
+    tt.match(capturedRequest.args(), []);
+    tt.equal(response.status, 400);
+    tt.equal(response.message, `offset must be at least 0`);
+    tt.end();
+  });
+
+  t.test(
+    `list rejects a non-integer limit without calling the API`,
+    async tt => {
+      const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+      const capturedRequest = tt.captureFn(thirdPartyRequest);
+      const ledgerBalance = new LedgerBalances(
+        capturedRequest,
+        mockLogger,
+        FormatResponse,
+      );
+
+      const response = await ledgerBalance.list({
+        limit: `10` as unknown as number,
+      });
+
+      tt.match(capturedRequest.args(), []);
+      tt.equal(response.status, 400);
+      tt.equal(response.message, `limit must be an integer if provided`);
+      tt.end();
+    },
+  );
+
   t.end();
 });

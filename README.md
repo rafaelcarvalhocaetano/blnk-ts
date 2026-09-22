@@ -129,6 +129,19 @@ const updatedLedger = await Ledgers.update(
 console.log('Ledger Updated:', updatedLedger);
 ```
 
+### List ledgers, balances, and transactions
+
+`Ledgers.list`, `LedgerBalances.list`, and `Transactions.list` wrap Core's `GET /ledgers`, `GET /balances`, and `GET /transactions` (present since ~0.14.x; this SDK is aligned with Core 0.15.4). Omit options to use Core's default page (`limit=10` / `offset=0` for ledgers and balances, `limit=20` for transactions). Invalid `limit` or `offset` is rejected client-side with HTTP 400.
+
+```typescript
+const firstPage = await Ledgers.list();
+const nextPage = await Ledgers.list({ limit: 10, offset: 10 });
+
+const balances = await LedgerBalances.list({ limit: 50 });
+
+const recentTransactions = await Transactions.list({ limit: 100 });
+```
+
 ---
 
 ## 5. Creating Identities
@@ -355,10 +368,17 @@ const response = await LedgerBalances.getLineage(
 
 | Method | Endpoint | Use case |
 |--------|----------|----------|
+| `BalanceMonitor.list()` | `GET /balance-monitors` | List all balance monitors |
+| `BalanceMonitor.listByBalanceId(id)` | `GET /balance-monitors/balances/{balance_id}` | List monitors for one balance |
 | `BalanceMonitor.delete(id)` | `DELETE /balance-monitors/{monitor_id}` | Remove a balance monitor (Core 0.15.0+) |
 
 ```typescript
 const { BalanceMonitor } = blnk;
+
+const forBalance = await BalanceMonitor.listByBalanceId(
+  'bln_5ce86029-3c2e-4e2a-aae2-7fb931ca4c4f',
+);
+// forBalance.data — MonitorDataResp[]
 
 const deleted = await BalanceMonitor.delete(monitor.data!.monitor_id);
 // deleted.data?.message — "BalanceMonitor deleted successfully"
