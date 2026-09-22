@@ -1,11 +1,16 @@
 import {BlnkLogger} from "../../types/blnkClient";
 import {BlnkRequest, FormatResponseType} from "../../types/general";
 import {CreateLedger, CreateLedgerResp, UpdateLedger} from "../../types/ledger";
+import {ListOptions} from "../../types/list";
 import {HandleError} from "../utils/logger";
 import {
   ValidateCreateLedger,
   ValidateUpdateLedger,
 } from "../utils/validators/ledgerValidators";
+import {
+  ListOptionsQueryString,
+  ValidateListOptions,
+} from "../utils/validators/listValidators";
 
 /**
  * Represents a class for managing ledger operations.
@@ -85,6 +90,40 @@ export class Ledgers {
       undefined,
       `GET`,
     );
+  }
+
+  /**
+   * Lists ledgers via `GET /ledgers`. Omit options to use Core's default page
+   * (`limit=10`, `offset=0`). Invalid pagination is rejected client-side
+   * with HTTP 400.
+   *
+   * This Core route has been present since ~0.14.x. This SDK is aligned with
+   * Core 0.15.4.
+   *
+   * @see https://docs.blnkfinance.com/sdks/go/ledgers/list-ledgers
+   */
+  async list<T extends Record<string, unknown>>(options?: ListOptions) {
+    try {
+      const error = ValidateListOptions(options);
+      if (error) {
+        return this.formatResponse(400, error, null);
+      }
+
+      const response = await this.request<undefined, CreateLedgerResp<T>[]>(
+        `ledgers${ListOptionsQueryString(options)}`,
+        undefined,
+        `GET`,
+      );
+
+      return response;
+    } catch (error: unknown) {
+      return HandleError(
+        error,
+        this.logger,
+        this.formatResponse,
+        this.list.name,
+      );
+    }
   }
 
   /**

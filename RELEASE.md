@@ -4,6 +4,15 @@
 
 Aligns the TypeScript SDK error catalogue with [Blnk Core 0.15.4](https://docs.blnkfinance.com/changelog/blnk-core).
 
+### List
+
+Core's list routes have been present since ~0.14.x (`api/api.go`); this SDK is aligned with Core 0.15.4.
+
+- **`Ledgers.list(options?)`** — `GET /ledgers`. Optional `limit` (at least 1) and `offset` (at least 0) as query parameters. Unset fields fall back to Core's defaults of `10` and `0`. Invalid pagination is rejected client-side with HTTP 400.
+- **`LedgerBalances.list(options?)`** — `GET /balances`, same `ListOptions` and Core defaults as ledgers.
+- **`Transactions.list(options?)`** — `GET /transactions`, same `ListOptions`. Core's default page here is `limit=20`. Core silently falls back to those defaults on invalid pagination; the SDK rejects them with 400 so mistakes stay visible.
+- **`BalanceMonitor.listByBalanceId(balanceId)`** — `GET /balance-monitors/balances/{balance_id}`. Existing `BalanceMonitor.list()` (all monitors) is unchanged. Live coverage is gated on `BLNK_E2E=1`.
+
 ### Errors
 
 - **`BlnkErrorCode`** — Now mirrors Core's full `error_detail.code` catalogue (`internal/apierror/codes.go`), grouped by prefix: `GEN_`, `AUTH_`, `APIKEY_`, `TXN_`, `BAL_`, `LGR_`, `ACC_`, `IDT_`, `RECON_`, `META_`, `HOOK_`, `QUEUE_`, `SRCH_`, and `ADMIN_`. Each constant documents the HTTP status Core pairs it with. [Guide](https://docs.blnkfinance.com/advanced/error-codes)

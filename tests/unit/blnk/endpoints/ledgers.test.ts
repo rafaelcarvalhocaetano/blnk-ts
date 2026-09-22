@@ -128,4 +128,52 @@ tap.test(`Ledger Tests`, async t => {
     tt.equal(response.status, 500);
     tt.equal(response.message, `Network Error`);
   });
+
+  t.test(
+    `list calls GET /ledgers with no query when no options are given`,
+    async tt => {
+      const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+      const capturedRequest = tt.captureFn(thirdPartyRequest);
+      const ledgers = new Ledgers(capturedRequest, mockLogger, FormatResponse);
+
+      const response = await ledgers.list();
+
+      tt.match(capturedRequest.args(), [[`ledgers`, undefined, `GET`]]);
+      tt.equal(response.status, 200);
+    },
+  );
+
+  t.test(`list forwards limit and offset as query parameters`, async tt => {
+    const thirdPartyRequest = createMockBlnkRequest(true, undefined, 200);
+    const capturedRequest = tt.captureFn(thirdPartyRequest);
+    const ledgers = new Ledgers(capturedRequest, mockLogger, FormatResponse);
+
+    const response = await ledgers.list({limit: 25, offset: 50});
+
+    tt.match(capturedRequest.args(), [
+      [`ledgers?limit=25&offset=50`, undefined, `GET`],
+    ]);
+    tt.equal(response.status, 200);
+  });
+
+  t.test(`list rejects a limit below 1 without calling the API`, async tt => {
+    const capturedRequest = tt.captureFn(thirdPartyRequest);
+    const ledgers = new Ledgers(capturedRequest, mockLogger, FormatResponse);
+    const response = await ledgers.list({limit: 0});
+
+    tt.match(capturedRequest.args(), []);
+    tt.equal(response.status, 400);
+    tt.equal(response.message, `limit must be at least 1`);
+  });
+
+  t.test(`list handles thrown errors gracefully`, async tt => {
+    const thirdPartyRequest = createMockBlnkRequest(true, `Network Error`);
+    const capturedRequest = tt.captureFn(thirdPartyRequest);
+    const ledgers = new Ledgers(capturedRequest, mockLogger, FormatResponse);
+    const response = await ledgers.list();
+
+    tt.match(capturedRequest.args(), [[`ledgers`, undefined, `GET`]]);
+    tt.equal(response.status, 500);
+    tt.equal(response.message, `Network Error`);
+  });
 });

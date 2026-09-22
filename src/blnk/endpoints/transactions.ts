@@ -23,8 +23,13 @@ import {
   TransactionLineageResponse,
   UpdateTransactionStatus,
 } from "../../types/transactions";
+import {ListOptions} from "../../types/list";
 import {HandleError} from "../utils/logger";
 import {serializeCreateTransaction} from "../utils/transactionSerialization";
+import {
+  ListOptionsQueryString,
+  ValidateListOptions,
+} from "../utils/validators/listValidators";
 import {
   ValidateBulkCommitInflight,
   ValidateBulkVoidInflight,
@@ -338,6 +343,37 @@ export class Transactions {
         this.logger,
         this.formatResponse,
         this.get.name,
+      );
+    }
+  }
+
+  /**
+   * Lists transactions via `GET /transactions`. Omit options to use Core's
+   * default page (`limit=20`, `offset=0`). Core silently falls back to those
+   * defaults on invalid pagination; the SDK rejects them with HTTP 400.
+   *
+   * This Core route has been present since ~0.14.x. This SDK is aligned with
+   * Core 0.15.4.
+   */
+  async list<T extends Record<string, unknown>>(options?: ListOptions) {
+    try {
+      const error = ValidateListOptions(options);
+      if (error) {
+        return this.formatResponse(400, error, null);
+      }
+
+      const response = await this.request<
+        undefined,
+        CreateTransactionResponse<T>[]
+      >(`transactions${ListOptionsQueryString(options)}`, undefined, `GET`);
+
+      return response;
+    } catch (error: unknown) {
+      return HandleError(
+        error,
+        this.logger,
+        this.formatResponse,
+        this.list.name,
       );
     }
   }
